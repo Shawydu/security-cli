@@ -1,0 +1,27 @@
+[project]
+name = "security-remediation"
+version = "0.1.0"
+description = "Supervised local Python dependency remediation prototype"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "pydantic>=2.11,<3",
+  "typer>=0.19,<1",
+  "PyYAML>=6.0,<7",
+  "packaging>=25,<27",
+  "pip-audit==2.10.1",
+]
+
+[project.scripts]
+security-remediation = "security_remediation.cli:app"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff==0.13.3"]
+
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["tests/fixtures"]
+addopts = "-q"

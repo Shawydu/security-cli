@@ -1,0 +1,19 @@
+schema_version: 1
+repository: local/pilot-http
+python_version: '3.12.14'
+package_index: https://pypi.org/simple
+dependency_groups: []
+extras: []
+max_agent_attempts: 3
+agent_timeout_seconds: 300
+run_timeout_seconds: 1800
+max_changed_files: 10
+max_changed_lines: 500
+max_dependency_version_changes: 10
+allow_major_upgrades: false
+allowed_edit_paths: [pyproject.toml, uv.lock, 'src/**']
+publication_enabled: false
+required_checks:
+  - id: tests
+    argv: [python, -m, unittest, discover, -s, tests, -v]
+    timeout_seconds: 120
