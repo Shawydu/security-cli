@@ -5,8 +5,8 @@ It is kept short on purpose - every line here is paid on every session.
 
 ## Learnings
 
-- The first milestone is a supervised **local-only** Python CLI; no GitHub publisher or Jenkins integration exists. `README.md` has exact setup, fixture, and pilot commands; the three design documents describe later scope too.
-- Run `uv run --locked pytest` and `uv run --locked ruff check src tests/test_local.py`. The CLI and pilot have separate `pyproject.toml`/`uv.lock` pairs; pilot inputs live under `tests/fixtures/`.
+- The first milestone is a supervised **local-only** Python CLI; no GitHub publisher or Jenkins integration exists. `README.md` has exact commands; `docs/phased-plan.md`, `docs/current-design.md`, and `docs/current-proposal.md` reflect current decisions (root-level design documents are historical).
+- Run `uv run --locked pytest` and `uv run --locked ruff check src tests skills`. The CLI and pilot have separate `pyproject.toml`/`uv.lock` pairs; pilot inputs live under `tests/fixtures/`.
 - A live disposable pilot upgraded urllib3 2.0.6 to 2.8.0 with 12 passing baseline/candidate checks and zero pi calls (2026-10-01). Pi's headless skill invocation was smoke-tested, **not** a live agent-authored repair. Audit findings can change with the feed.
 - No sandbox or credential separation has been proven: pi, installs, and tests run on the host. Do not claim unattended/production safety or enable publication on this evidence; see `docs/harness-compatibility.md`.
 - Keep state, output, and trusted policy outside the clean source checkout. Attempt reservations persist only while local state survives; changing base/alert/policy/skill conflicts rather than silently resetting the budget.

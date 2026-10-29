@@ -10,7 +10,7 @@ macOS/Linux with `uv 0.12.12`, `pi 0.99.1`, Git, and a uv-managed CPython `3.12.
 uv python install 3.12.14
 uv sync --python 3.12.14 --locked --no-build
 uv run --locked pytest
-uv run --locked ruff check src tests/test_local.py
+uv run --locked ruff check src tests skills
 ```
 
 Network-free simulation (not verified security evidence):
@@ -41,6 +41,17 @@ Read `$tmp/out/{candidate.patch,assessment.json,plan.json,verification.json,run-
 
 Exit codes: `0` verified local candidate, `10` blocked, `20` attempt budget exhausted, `30` operational error, `40` state/source conflict (invalid or ineligible input is `10`). Fixture command exit 0 means **only that the simulated fixture ran**. Invalid input/conflict can exit before a result file is created; normal blocked/operational paths write `run-result.json`.
 
+## Triage skill (harness-neutral)
+
+`skills/security-triage/` ranks open Dependabot alerts and [security-audit-skill](https://github.com/cloudflare/security-audit-skill) `findings.json` records into one worklist. It is read-only and its script needs only `python3` (stdlib). Install it where your agent discovers skills:
+
+```sh
+ln -s "$PWD/skills/security-triage" /path/to/target-repo/.github/skills/security-triage   # GitHub Copilot
+ln -s "$PWD/skills/security-triage" /path/to/target-repo/.claude/skills/security-triage   # Claude Code
+```
+
+Or run it directly; see `skills/security-triage/SKILL.md` for inputs and what each action means.
+
 ## What is checked and what is not
 
 - Pilot: Python 3.12.14, public PyPI wheels, default runtime dependencies only (no extras/groups or third-party VCS/path sources). The runner and pilot each have their own `uv.lock`; include both when committing this work. Pilot has a real `unittest` suite; `tests` collection must be nonempty and not shrink. Optional lint/build can be configured as trusted absolute commands, but the pilot has neither. This is **not** a general Python dependency solver; transitive parent migrations and major upgrades are blocked/manual.
@@ -50,4 +61,4 @@ Exit codes: `0` verified local candidate, `10` blocked, `20` attempt budget exha
 
 Observed live pilot on 2026-10-01: baseline urllib3 2.0.6 with 9 reported findings; deterministic candidate urllib3 2.8.0 with 0; baseline and candidate lock/sync/inventory/tests/audit passed, zero pi attempts, candidate patch passed `git apply --check`. Future advisory feeds may yield different results or a blocked run.
 
-Design context: [proposal](Security_Remediation_Proposal.md), [technical design](Security_Remediation_Design.md), and [implementation brief](Coding_Agent_Implementation_Brief.md). These predate the pilot and describe optional later integrations that are not installed here.
+Current decisions: [phased plan](docs/phased-plan.md), [as-built design](docs/current-design.md), and [current proposal](docs/current-proposal.md). The root-level [proposal](Security_Remediation_Proposal.md), [technical design](Security_Remediation_Design.md), and [implementation brief](Coding_Agent_Implementation_Brief.md) are historical specifications; their optional integrations are not installed.
