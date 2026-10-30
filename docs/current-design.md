@@ -1,6 +1,6 @@
 # Current technical design — implemented local pilot
 
-Status: **as built, 2026-10-01**. This describes the actual narrow CLI and its known gaps, not the aspirational isolation/publication design in [the original specification](../Security_Remediation_Design.md). [Roadmap](phased-plan.md) and [proposal](current-proposal.md) distinguish next work from implemented behavior. Use [README](../README.md) for executable commands.
+Status: **as built, 2026-10-01**. This describes the actual narrow CLI and its known gaps, not the aspirational isolation/publication design in the original specification. [Roadmap](phased-plan.md) and [proposal](current-proposal.md) distinguish next work from implemented behavior. Use [README](../README.md) for executable commands.
 
 ## Authority and flow
 

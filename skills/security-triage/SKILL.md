@@ -9,13 +9,14 @@ Produces a ranked worklist. It never edits code, dismisses alerts, or opens PRs.
 
 ## Inputs
 
-Gather whichever exist; either one alone is fine.
+Gather whichever exist; any one alone is fine.
 
 1. **Dependabot alerts** for `OWNER/REPO` (needs a token with Dependabot alerts read access):
    ```sh
    gh api --paginate --slurp 'repos/OWNER/REPO/dependabot/alerts?state=open&per_page=100' > alerts.json
    ```
 2. **Audit findings**: the `findings.json` written by [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), default `~/security-audit-skill/<repo>/run-<N>/findings.json`. Pass every run you want to include.
+3. **osv-scanner** dependency vulnerabilities: `osv-scanner scan source -r --format json . > osv.json` (pass with `--osv`; Dependabot duplicates are dropped).
 
 ## Run
 

@@ -1,5 +1,7 @@
 # Security remediation (supervised local prototype)
 
+The `src/` Python CLI described next is the earlier uv-only pilot, superseded by `remediate.py` (see "Current pipeline" below). It is kept, not deleted.
+
 A Python CLI for one saved dependency alert in a clean Git checkout. It first tries a deterministic compatible uv upgrade; if that fails, it may invoke one preconfigured **pi** coding agent (at most three reserved CLI invocations across restarts). Runner-owned code validates a candidate and independently checks a fresh selected environment. It emits a local patch/report only, **never** publishes a PR, merges code, or dismisses alerts.
 
 ## Requirements and quick start
@@ -41,16 +43,23 @@ Read `$tmp/out/{candidate.patch,assessment.json,plan.json,verification.json,run-
 
 Exit codes: `0` verified local candidate, `10` blocked, `20` attempt budget exhausted, `30` operational error, `40` state/source conflict (invalid or ineligible input is `10`). Fixture command exit 0 means **only that the simulated fixture ran**. Invalid input/conflict can exit before a result file is created; normal blocked/operational paths write `run-result.json`.
 
-## Triage skill (harness-neutral)
+## Current pipeline: triage, remediate.py, escalation skill
 
-`skills/security-triage/` ranks open Dependabot alerts and [security-audit-skill](https://github.com/cloudflare/security-audit-skill) `findings.json` records into one worklist. It is read-only and its script needs only `python3` (stdlib). Install it where your agent discovers skills:
+Dependency remediation is high-certainty, so a deterministic tool does it; the agent only handles escalations.
 
-```sh
-ln -s "$PWD/skills/security-triage" /path/to/target-repo/.github/skills/security-triage   # GitHub Copilot
-ln -s "$PWD/skills/security-triage" /path/to/target-repo/.claude/skills/security-triage   # Claude Code
-```
-
-Or run it directly; see `skills/security-triage/SKILL.md` for inputs and what each action means.
+1. **Triage** (`skills/security-triage/`): ranks open Dependabot alerts and [security-audit-skill](https://github.com/cloudflare/security-audit-skill) `findings.json` into one read-only worklist (stdlib `python3`).
+2. **`skills/vulnerability-remediation/remediate.py`**: baseline check and scan, new branch, ecosystem fix, scope check, verify (`scan_diff.py`), commit. Stdlib only, needs `osv-scanner` and the repo toolchain.
+   ```sh
+   python3 skills/vulnerability-remediation/remediate.py fix --package urllib3 --advisory GHSA-xxxx-xxxx-xxxx \
+     --version 2.8.0 --check "uv sync --locked && uv run pytest" --out ../remediation
+   ```
+   Exit `0` fixed and committed; `1` escalate (reason in `result.json`); `2` cannot start. Automated: npm and Maven (via experimental `osv-scanner fix`), Go, Cargo, uv (native commands). Gradle, Poetry, pip-tools, Bundler, NuGet, pnpm and Yarn are manual.
+3. **Escalation skill** (`skills/vulnerability-remediation/SKILL.md`): for exit 1 and for unautomated ecosystems; the agent reads `result.json` and logs, acts per reason, then runs `remediate.py verify`. Harness-neutral:
+   ```sh
+   ln -s "$PWD/skills/vulnerability-remediation" /path/to/repo/.github/skills/vulnerability-remediation   # Copilot
+   ln -s "$PWD/skills/vulnerability-remediation" /path/to/repo/.claude/skills/vulnerability-remediation   # Claude Code
+   ```
+4. **Example workflow** `skills/vulnerability-remediation/examples/remediate.yml`: `workflow_dispatch` that runs `fix`, opens a PR on success, and uploads evidence. Test plan: [docs/remediation-test-plan.md](docs/remediation-test-plan.md).
 
 ## What is checked and what is not
 
@@ -61,4 +70,4 @@ Or run it directly; see `skills/security-triage/SKILL.md` for inputs and what ea
 
 Observed live pilot on 2026-10-01: baseline urllib3 2.0.6 with 9 reported findings; deterministic candidate urllib3 2.8.0 with 0; baseline and candidate lock/sync/inventory/tests/audit passed, zero pi attempts, candidate patch passed `git apply --check`. Future advisory feeds may yield different results or a blocked run.
 
-Current decisions: [phased plan](docs/phased-plan.md), [as-built design](docs/current-design.md), and [current proposal](docs/current-proposal.md). The root-level [proposal](Security_Remediation_Proposal.md), [technical design](Security_Remediation_Design.md), and [implementation brief](Coding_Agent_Implementation_Brief.md) are historical specifications; their optional integrations are not installed.
+Current decisions: [phased plan](docs/phased-plan.md), [as-built design](docs/current-design.md), and [current proposal](docs/current-proposal.md). The original root-level proposal, design and brief documents have been deleted.

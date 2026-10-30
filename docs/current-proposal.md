@@ -1,6 +1,6 @@
 # Current proposal — from local proof toward a useful remediation CLI
 
-Status: **local proof implemented; future phases proposed, not authorized for deployment**. This replaces the assumptions of the [original proposal](../Security_Remediation_Proposal.md) with decisions confirmed during the pilot. Refer to [current design](current-design.md) for as-built behavior and [phased plan](phased-plan.md) for sequencing and exit gates.
+Status: **local proof implemented; future phases proposed, not authorized for deployment**. This replaces the assumptions of the original proposal with decisions confirmed during the pilot. Refer to [current design](current-design.md) for as-built behavior and [phased plan](phased-plan.md) for sequencing and exit gates.
 
 ## Goal and value test
 

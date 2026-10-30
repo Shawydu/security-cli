@@ -46,7 +46,7 @@ def test_ranks_links_and_filters(tmp_path):
     result = triage.triage(triage.flatten(json.loads(path.read_text())), findings, tmp_path)
     by_id = {item["id"]: item for item in result["items"]}
 
-    assert result["dropped"] == {"dependabot_not_open": 1, "audit_rejected": 1}
+    assert result["dropped"] == {"dependabot_not_open": 1, "audit_rejected": 1, "osv_duplicate": 0}
     assert [item["id"] for item in result["items"]][:3] == ["audit:ssrf", "dependabot:2", "dependabot:1"]
     assert by_id["dependabot:4"]["action"] == "manual-no-patch"
     assert by_id["audit:gone"]["action"] == "stale-reaudit"
@@ -60,3 +60,26 @@ def test_stale_check_rejects_paths_outside_repo(tmp_path):
     escaped = finding("x", "confirmed")
     escaped["trace"][0]["file"] = "../../etc/passwd"
     assert triage.stale_locations(escaped, tmp_path.resolve())[0].endswith("(missing)")
+
+
+def test_osv_items_dedupe_and_patch_choice():
+    def pkg(name, version, gid, score, fixed, aliases=()):
+        events = [{"introduced": "0"}] + [{"fixed": f} for f in fixed]
+        return {"package": {"name": name, "version": version, "ecosystem": "PyPI"},
+                "vulnerabilities": [{"id": gid, "summary": f"{name} bug",
+                                     "affected": [{"package": {"name": name, "ecosystem": "PyPI"},
+                                                   "ranges": [{"type": "ECOSYSTEM", "events": events}]}]}],
+                "groups": [{"ids": [gid, *aliases], "aliases": list(aliases), "max_severity": score}]}
+    data = {"results": [{"source": {"path": "/r/uv.lock"}, "packages": [
+        pkg("django", "3.2.5", "GHSA-aaaa-bbbb-cccc", "9.8", ["2.2.28", "3.2.12", "4.0.2"]),
+        pkg("urllib3", "2.0.6", "GHSA-g4mx-q9vg-27p4", "5.3", ["2.0.7"]),
+        pkg("ecdsa", "0.18", "PYSEC-1", None, ["0.10"]),
+    ]}]}
+    result = triage.triage([alert(1, "URLLib3", "medium", "GHSA-g4mx-q9vg-27p4")], osv=data)
+    by_id = {item["id"]: item for item in result["items"]}
+    django = by_id["osv:PyPI/django@3.2.5:GHSA-aaaa-bbbb-cccc"]
+    assert (django["severity"], django["patched_version"], django["action"]) == ("critical", "3.2.12", "remediate-dependency")
+    assert by_id["osv:PyPI/ecdsa@0.18:PYSEC-1"]["action"] == "manual-no-patch"
+    assert by_id["osv:PyPI/ecdsa@0.18:PYSEC-1"]["severity"] == "unrated"
+    assert not any(i.startswith("osv:PyPI/urllib3") for i in by_id) and "dependabot:1" in by_id
+    assert result["dropped"]["osv_duplicate"] == 1
